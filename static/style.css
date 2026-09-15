@@ -111,3 +111,72 @@ h1 {
 .delete-btn:hover {
     text-decoration: underline;
 }
+
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.topbar h1 {
+    margin: 0;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: #666;
+}
+
+.user-info a {
+    color: #4a6cf7;
+    text-decoration: none;
+}
+
+.auth-container {
+    max-width: 360px;
+    margin-top: 80px;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.auth-form input {
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.auth-form button {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    background: #4a6cf7;
+    color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.auth-link {
+    text-align: center;
+    font-size: 13px;
+    color: #666;
+    margin-top: 16px;
+}
+
+.auth-link a {
+    color: #4a6cf7;
+}
+
+.error {
+    color: #e74c3c;
+    font-size: 13px;
+    text-align: center;
+}

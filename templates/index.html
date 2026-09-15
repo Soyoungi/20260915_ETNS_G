@@ -7,7 +7,13 @@
 </head>
 <body>
     <div class="container">
-        <h1>📝 할일 관리</h1>
+        <div class="topbar">
+            <h1>📝 할일 관리</h1>
+            <div class="user-info">
+                <span>{{ username }}님</span>
+                <a href="{{ url_for('logout') }}">로그아웃</a>
+            </div>
+        </div>
 
         <form action="{{ url_for('add') }}" method="post" class="add-form">
             <input type="text" name="content" placeholder="할일을 입력하세요" autocomplete="off" required>

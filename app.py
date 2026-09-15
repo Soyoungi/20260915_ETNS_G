@@ -1,19 +1,17 @@
 import os
-import sqlite3
-from pathlib import Path
 
+import psycopg2
+import psycopg2.extras
 from flask import Flask, g, redirect, render_template, request, url_for
 
-BASE_DIR = Path(__file__).resolve().parent
-DB_PATH = Path("/tmp/todo.db") if os.environ.get("VERCEL") else BASE_DIR / "todo.db"
+DATABASE_URL = os.environ["DATABASE_URL"]
 
 app = Flask(__name__)
 
 
 def get_db():
     if "db" not in g:
-        g.db = sqlite3.connect(DB_PATH)
-        g.db.row_factory = sqlite3.Row
+        g.db = psycopg2.connect(DATABASE_URL)
     return g.db
 
 
@@ -25,27 +23,27 @@ def close_db(exception=None):
 
 
 def init_db():
-    db = sqlite3.connect(DB_PATH)
-    db.execute(
-        """
-        CREATE TABLE IF NOT EXISTS todo (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            content TEXT NOT NULL,
-            done INTEGER NOT NULL DEFAULT 0,
-            created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+    conn = psycopg2.connect(DATABASE_URL)
+    with conn, conn.cursor() as cur:
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS todo (
+                id SERIAL PRIMARY KEY,
+                content TEXT NOT NULL,
+                done BOOLEAN NOT NULL DEFAULT FALSE,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+            )
+            """
         )
-        """
-    )
-    db.commit()
-    db.close()
+    conn.close()
 
 
 @app.route("/")
 def index():
     db = get_db()
-    todos = db.execute(
-        "SELECT * FROM todo ORDER BY done ASC, id DESC"
-    ).fetchall()
+    with db.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute("SELECT * FROM todo ORDER BY done ASC, id DESC")
+        todos = cur.fetchall()
     return render_template("index.html", todos=todos)
 
 
@@ -54,26 +52,26 @@ def add():
     content = request.form.get("content", "").strip()
     if content:
         db = get_db()
-        db.execute("INSERT INTO todo (content) VALUES (?)", (content,))
-        db.commit()
+        with db, db.cursor() as cur:
+            cur.execute("INSERT INTO todo (content) VALUES (%s)", (content,))
     return redirect(url_for("index"))
 
 
 @app.route("/toggle/<int:todo_id>", methods=["POST"])
 def toggle(todo_id):
     db = get_db()
-    db.execute(
-        "UPDATE todo SET done = 1 - done WHERE id = ?", (todo_id,)
-    )
-    db.commit()
+    with db, db.cursor() as cur:
+        cur.execute(
+            "UPDATE todo SET done = NOT done WHERE id = %s", (todo_id,)
+        )
     return redirect(url_for("index"))
 
 
 @app.route("/delete/<int:todo_id>", methods=["POST"])
 def delete(todo_id):
     db = get_db()
-    db.execute("DELETE FROM todo WHERE id = ?", (todo_id,))
-    db.commit()
+    with db, db.cursor() as cur:
+        cur.execute("DELETE FROM todo WHERE id = %s", (todo_id,))
     return redirect(url_for("index"))
 
 
